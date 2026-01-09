@@ -1,10 +1,9 @@
 saved_queries:
   - name: all_metrics_by_order_d
     label: all_metrics_by_order_d
-    description: Combined metrics from orders, order_item, and customers grouped by day (metric_time/day).
+    description: "All metrics grouped by day"
     query_params:
       metrics:
-        # ----- from fct_orders.yml -----
         - order_total
         - locations_with_orders
         - order_value_p99
@@ -13,27 +12,15 @@ saved_queries:
         - food_order_amount
         - max_order_amount
         - min_order_amount
-        - new_customer
         - order_amount
         - food_order_pct
         - food_order_pct_cumulative
-        - food_order_gross_profit
-        - cumulative_order_amount
-        - cumulative_order_ammount_l1m
-        - cumulative_order_amount_mtd
-
-        # ----- from order_items.yml (you need metrics for these measures) -----
+        - customers
         - revenue
         - food_revenue
         - drink_revenue
-
-        # ----- from dim_customer.yml -----
-        - customers
-        - customers_with_orders_cte   # renamed to avoid collision
-
       group_by:
-        - TimeDimension('metric_time', 'day')
-
+        - "TimeDimension('metric_time', 'day')"
     exports:
       - name: all_metrics_by_order_d
         config:
