@@ -1,9 +1,10 @@
 saved_queries:
-  - name: orders_all_metrics_by_day
-    label: orders_all_metrics_by_day
-    description: All metrics grouped by metric_time at day grain (derived from order_d).
+  - name: all_metrics_by_order_d
+    label: all_metrics_by_order_d
+    description: Combined metrics from orders, order_item, and customers grouped by day (metric_time/day).
     query_params:
       metrics:
+        # ----- from fct_orders.yml -----
         - order_total
         - locations_with_orders
         - order_value_p99
@@ -20,10 +21,21 @@ saved_queries:
         - cumulative_order_amount
         - cumulative_order_ammount_l1m
         - cumulative_order_amount_mtd
+
+        # ----- from order_items.yml (you need metrics for these measures) -----
+        - revenue
+        - food_revenue
+        - drink_revenue
+
+        # ----- from dim_customer.yml -----
+        - customers
+        - customers_with_orders_cte   # renamed to avoid collision
+
       group_by:
         - TimeDimension('metric_time', 'day')
+
     exports:
-      - name: orders_all_metrics_by_day
+      - name: all_metrics_by_order_d
         config:
           export_as: table
           schema: dbt_ann
