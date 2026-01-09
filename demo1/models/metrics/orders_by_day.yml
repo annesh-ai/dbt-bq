@@ -1,0 +1,86 @@
+semantic_models:
+  - name: orders_by_day
+    description: Daily order facts keyed by order_d (DATE).
+    model: ref('fct_orders')
+
+    defaults:
+      agg_time_dimension: order_d
+
+    entities:
+      - name: order_id
+        type: primary
+      - name: location
+        type: foreign
+        expr: location_id
+      - name: customer
+        type: foreign
+        expr: customer_id
+
+    dimensions:
+      - name: order_d
+        type: time
+        expr: order_d
+        type_params:
+          time_granularity: day
+
+      - name: order_total_dim
+        type: categorical
+        expr: CAST(order_total AS STRING)
+
+      - name: is_food_order
+        type: categorical
+        expr: CAST(is_food_order AS STRING)
+
+    measures:
+      - name: order_total
+        agg: sum
+        expr: order_total
+
+      - name: order_count
+        agg: sum
+        expr: 1
+
+      - name: tax_paid
+        agg: sum
+        expr: tax_paid
+
+      - name: customers_with_orders
+        agg: count_distinct
+        expr: customer_id
+
+      - name: locations_with_orders
+        agg: count_distinct
+        expr: location_id
+
+      - name: order_cost
+        agg: sum
+        expr: order_cost
+
+      - name: order_value_p99
+        expr: order_total
+        agg: percentile
+        agg_params:
+          percentile: 0.99
+          use_discrete_percentile: true
+          use_approximate_percentile: false
+
+      - name: discrete_order_value_p99
+        expr: order_total
+        agg: percentile
+        agg_params:
+          percentile: 0.99
+          use_discrete_percentile: true
+          use_approximate_percentile: false
+
+      - name: food_orders
+        expr: CASE WHEN is_food_order THEN order_total ELSE 0 END
+        agg: sum
+
+      - name: max_order_value
+        expr: order_total
+        agg: max
+        agg_time_dimension: order_d
+
+      - name: min_order_value
+        expr: order_total
+        agg: min
