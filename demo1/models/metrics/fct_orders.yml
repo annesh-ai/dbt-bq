@@ -5,7 +5,7 @@ semantic_models:
     model: ref('fct_orders')
 
     defaults:
-      agg_time_dimension: ordered_at
+      agg_time_dimension: order_d
 
     entities:
       - name: order_id
@@ -20,21 +20,20 @@ semantic_models:
         expr: customer_id
 
     dimensions:
-      # BigQuery-safe: ensure this is a DATE so all SL filters/windows compare DATE-to-DATE
-      - name: ordered_at
+      # Canonical DATE time dimension for BigQuery + SL windows/MTD
+      - name: order_d
         type: time
-        expr: DATE(ordered_at)          # if ordered_at is TIMESTAMP/DATETIME in BigQuery
+        expr: order_d
         type_params:
           time_granularity: day
 
       - name: order_total_dim
         type: categorical
-        expr: CAST(order_total AS STRING)   # optional: keep categorical truly categorical
-        # If you actually want numeric comparisons (>= 20), keep it numeric instead.
+        expr: CAST(order_total AS STRING)
 
       - name: is_food_order
         type: categorical
-        expr: CAST(is_food_order AS STRING) # optional; depends on source type (BOOL vs STRING)
+        expr: is_food_order
 
     measures:
       - name: order_total
@@ -89,7 +88,7 @@ semantic_models:
       - name: max_order_value
         expr: order_total
         agg: max
-        agg_time_dimension: ordered_at
+        agg_time_dimension: order_d
 
       - name: min_order_value
         expr: order_total
@@ -122,7 +121,7 @@ metrics:
     type: simple
     label: discrete_order_value_p99
     type_params:
-      measure: discrete_order_value_p99   # fixed: you had measure: order_value_p99
+      measure: discrete_order_value_p99
 
   - name: large_order
     description: Count of orders with order total over 20.
@@ -197,11 +196,12 @@ metrics:
         - name: order_total
           alias: revenue
           filter: |
-            {{ Dimension('product__is_food_order') }} = True
+            {{ Dimension('order_id__is_food_order') }} = 'true'
         - name: order_amount
           alias: cost
           filter: |
-            {{ Dimension('product__is_food_order') }} = True
+            {{ Dimension('order_id__is_food_order') }} = 'true'
+
 
   - name: cumulative_order_amount
     label: cumulative_order_amount
